@@ -1,0 +1,124 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_recom_processor_logic_app_name": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "sites_recomm_func_externalid": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "connections_azureblob_externalid": {
+            "defaultValue": "",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_recom_processor_logic_app_name')]",
+            "location": "northcentralus",
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "method": "GET",
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Delay": {
+                            "runAfter": {},
+                            "type": "Wait",
+                            "inputs": {
+                                "interval": {
+                                    "count": 8,
+                                    "unit": "Second"
+                                }
+                            }
+                        },
+                        "Get_blob_content_(V2)": {
+                            "runAfter": {
+                                "Delay": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "metadata": {
+                                "JTJmZm9ybS1hbnN3ZXIlMmZhbnN3ZXIuanNvbg==": "/form-answer/answer.json"
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                    }
+                                },
+                                "method": "get",
+                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('recommendationproject'))}/files/@{encodeURIComponent(encodeURIComponent('JTJmZm9ybS1hbnN3ZXIlMmZhbnN3ZXIuanNvbg=='))}/content",
+                                "queries": {
+                                    "inferContentType": true
+                                }
+                            }
+                        },
+                        "Response": {
+                            "runAfter": {
+                                "func1_2": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Response",
+                            "kind": "Http",
+                            "inputs": {
+                                "body": "@body('func1_2')",
+                                "statusCode": 200
+                            }
+                        },
+                        "func1_2": {
+                            "runAfter": {
+                                "Get_blob_content_(V2)": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Function",
+                            "inputs": {
+                                "body": "@body('Get_blob_content_(V2)')",
+                                "function": {
+                                    "id": "[concat(parameters('sites_recomm_func_externalid'), '/functions/func1')]"
+                                }
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "azureblob": {
+                                "connectionId": "[parameters('connections_azureblob_externalid')]",
+                                "connectionName": "azureblob",
+                                "id": ""
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}
