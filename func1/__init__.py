@@ -1,6 +1,7 @@
 import logging
 import base64
 import json
+import time
 
 import azure.functions as func
 from .resolvers import get_answer
@@ -35,8 +36,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     
     # Get the content and parse it
     req_body = req.get_json()
-    logging.info(req_body)
-    logging.info(type(req_body))
     encoded_content = ""
 
     try:
@@ -45,7 +44,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     except:
         pass
     
-    logging.info("aftre try-except")
     if encoded_content == "wakeup":
         return func.HttpResponse(f"This HTTP triggered function executed successfully. Wakeup operation")
 
@@ -54,20 +52,35 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     content = req_body
 
     # Get details
-    segment = get_answer("segment", content).strip()
-    org_size = get_answer("org_size", content).strip()
-    sec_department = get_answer("sec_department", content).strip()
-    web = get_answer("web", content).strip()
-    sql = get_answer("sql", content).strip()
-    storage = get_answer("storage", content).strip()
-    cloud = get_answer("cloud", content).strip()
-    containers = get_answer("containers", content).strip()
-    iot = get_answer("iot", content).strip()
-    industrial = get_answer("industrial", content).strip()
-    internet_exposed = get_answer("internet_exposed", content).strip()
-    top_concern = get_answer("top_concern", content).strip()
-    top_impact = get_answer("top_impact", content).strip()
-    sensitivity = get_answer("sensitivity", content).strip()
+    # Trim twice because the request that is sent from logic app is different than regular function call.
+    segment = get_answer("segment", content).strip("\\n").strip("\n")
+    logging.info("segment " + segment)
+    org_size = get_answer("org_size", content).strip("\\n").strip("\n")
+    logging.info("org_size " + org_size)
+    sec_department = get_answer("sec_department", content).strip("\\n").strip("\n")
+    logging.info("sec_department " + sec_department)
+    web = get_answer("web", content).strip("\\n").strip("\n")
+    logging.info("web " + web)
+    sql = get_answer("sql", content).strip("\\n").strip("\n")
+    logging.info("sql " + sql)
+    storage = get_answer("storage", content).strip("\\n").strip("\n")
+    logging.info("storage " + storage)
+    cloud = get_answer("cloud", content).strip("\\n").strip("\n")
+    logging.info("cloud " + cloud)
+    containers = get_answer("containers", content).strip("\\n").strip("\n")
+    logging.info("containers " + containers)
+    iot = get_answer("iot", content).strip("\\n").strip("\n")
+    logging.info("iot " + iot)
+    industrial = get_answer("industrial", content).strip("\\n").strip("\n")
+    logging.info("industrial " + industrial)
+    internet_exposed = get_answer("internet_exposed", content).strip("\\n").strip("\n")
+    logging.info("internet_exposed " + internet_exposed)
+    top_concern = get_answer("top_concern", content).strip("\\n").strip("\n")
+    logging.info("top_concern " + top_concern)
+    top_impact = get_answer("top_impact", content).strip("\\n").strip("\n")
+    logging.info("top_impact " + top_impact)
+    sensitivity = get_answer("sensitivity", content).strip("\\n").strip("\n")
+    logging.info("sensitivity " + sensitivity)
 
     scores = calculate(segment, org_size, sec_department, web, sql, storage, cloud, containers, iot, industrial, internet_exposed, top_concern, top_impact, sensitivity)
 
@@ -76,7 +89,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     products_final_dict = convert_to_percentage(sorted_products)
     output = prepare_output(products_final_dict)
 
-    #return func.HttpResponse(f"This HTTP triggered function executed successfully.")
+    
+    time.sleep(2)
     return func.HttpResponse(output)
 
 # The function gets a dictionary with scores and convers the scores to percentage

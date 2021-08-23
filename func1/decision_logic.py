@@ -1,8 +1,11 @@
+import logging
+import base64
+
 EASY_TO_OPERATE = ["AM", "WAF", "DDOS"]
 
 # The function calculates the score of each security products
 def calculate(segment, org_size, sec_department, web, sql, storage, cloud, containers, iot, industrial, internet_exposed, top_concern, top_impact, sensitivity):
-
+    
     products = {
         "AM": 6,
         "EDR": 0,
@@ -112,7 +115,7 @@ def calculate(segment, org_size, sec_department, web, sql, storage, cloud, conta
     if iot == "2":
         products["IOT"] += 3
 
-    if containers == "3":
+    if iot == "3":
         products["IOT"] += 5
 
 
